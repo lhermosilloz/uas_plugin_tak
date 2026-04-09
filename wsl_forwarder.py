@@ -37,7 +37,6 @@ def px4_to_windows():
     while True:
         msg = m.recv_match(blocking=True)
         if msg:
-
             if msg.get_type() == 'COMMAND_ACK':
                 cmd_id = msg.command
                 result = msg.result
@@ -108,7 +107,34 @@ def send_heartbeat():
         )
         time.sleep(1)
 
+def set_position_control_mode():
+    """Set PX4 to Position Control mode"""
+    print("Setting Position Control mode...")
+    
+    # PX4 Position Control mode
+    m.mav.set_mode_send(
+        target_system=1,
+        base_mode=mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+        custom_mode=3  # PX4 POSCTL (Position Control) mode
+    )
+    
+    # Wait for mode change confirmation
+    time.sleep(1)
+    
+    # Check if mode changed
+    hb = m.recv_match(type='HEARTBEAT', blocking=True, timeout=3)
+    if hb:
+        print(f"Current flight mode: {hb.custom_mode}")
+        if hb.custom_mode == 3:
+            print("Successfully changed to Position Control mode")
+            return True
+        else:
+            print("Mode change failed")
+            return False
+    return False
+
 threading.Thread(target=px4_to_windows, daemon=True).start()
 threading.Thread(target=windows_to_px4, daemon=True).start()
 threading.Thread(target=send_heartbeat, daemon=True).start()
+set_position_control_mode()
 input("Press Enter to stop...\n")
