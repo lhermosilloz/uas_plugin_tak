@@ -37,6 +37,26 @@ def px4_to_windows():
     while True:
         msg = m.recv_match(blocking=True)
         if msg:
+
+            if msg.get_type() == 'COMMAND_ACK':
+                cmd_id = msg.command
+                result = msg.result
+
+                print(f'PX4 ACK: Command {cmd_id} Result {result}')
+
+                if result == 0:
+                    print('Accepted')
+                elif result == 1:
+                    print('Temporarily Rejected')
+                elif result == 2:
+                    print('Denied')
+                elif result == 3:
+                    print('Unsupported')
+                elif result == 4:
+                    print('Failed')
+                else:
+                    print('Unknown result code')
+
             buf = msg.get_msgbuf()
             fwd.sendto(bytes(buf), (WINDOWS_HOST, FORWARD_PORT))
 
