@@ -47,35 +47,35 @@ cmd_sock.bind(('0.0.0.0', 14541))
 def windows_to_px4():
     while True:
         data, addr = cmd_sock.recvfrom(4096)
-        print(f'CMD to PX4: {len(data)} bytes from {addr}')
-        
-        # Decode and analyze the MAVLink messages
-        messages = decode_mavlink_data(data, "ATAK/Windows")
-        for msg in messages:
-            msg_type = msg.get_type()
-            print(f'  → Message: {msg_type}')
-            
-            # Show details for command messages
-            if msg_type == 'COMMAND_LONG':
-                cmd_id = msg.command
-                print(f'    Command ID: {cmd_id}')
-                print(f'    Target System: {msg.target_system}')
-                print(f'    Target Component: {msg.target_component}')
-                print(f'    Params: [{msg.param1}, {msg.param2}, {msg.param3}, {msg.param4}, {msg.param5}, {msg.param6}, {msg.param7}]')
+        if len(data) > 30:
+            print(f'CMD to PX4: {len(data)} bytes from {addr}')
+
+            # Decode and analyze the MAVLink messages
+            messages = decode_mavlink_data(data, "ATAK/Windows")
+            for msg in messages:
+                msg_type = msg.get_type()
+                print(f'  → Message: {msg_type}')
                 
-                # Decode common commands
-                if cmd_id == 400:  # MAV_CMD_COMPONENT_ARM_DISARM
-                    arm_state = "ARM" if msg.param1 == 1 else "DISARM"
-                    print(f'    → {arm_state} command')
-                elif cmd_id == 22:  # MAV_CMD_NAV_TAKEOFF
-                    altitude = msg.param7
-                    print(f'    → TAKEOFF to {altitude}m')
-                elif cmd_id == 21:  # MAV_CMD_NAV_LAND
-                    print(f'    → LAND command')
-            
-            elif msg_type == 'HEARTBEAT':
-                print(f'    Type: {msg.type}, Autopilot: {msg.autopilot}')
+                # Show details for command messages
+                if msg_type == 'COMMAND_LONG':
+                    cmd_id = msg.command
+                    print(f'    Command ID: {cmd_id}')
+                    print(f'    Target System: {msg.target_system}')
+                    print(f'    Target Component: {msg.target_component}')
+                    print(f'    Params: [{msg.param1}, {msg.param2}, {msg.param3}, {msg.param4}, {msg.param5}, {msg.param6}, {msg.param7}]')
+                    
+                    # Decode common commands
+                    if cmd_id == 400:  # MAV_CMD_COMPONENT_ARM_DISARM
+                        arm_state = "ARM" if msg.param1 == 1 else "DISARM"
+                        print(f'    → {arm_state} command')
+                    elif cmd_id == 22:  # MAV_CMD_NAV_TAKEOFF
+                        altitude = msg.param7
+                        print(f'    → TAKEOFF to {altitude}m')
+                    elif cmd_id == 21:  # MAV_CMD_NAV_LAND
+                        print(f'    → LAND command')
                 
+                elif msg_type == 'HEARTBEAT':
+                    print(f'    Type: {msg.type}, Autopilot: {msg.autopilot}')
         # Forward to PX4
         fwd.sendto(data, ('127.0.0.1', PX4_PORT))
 
