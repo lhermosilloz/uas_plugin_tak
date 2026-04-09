@@ -28,11 +28,11 @@ print(f"Command Port: 14541\n")
 
 try:
     m = mavutil.mavlink_connection('udp:0.0.0.0:14540')
-    print('🔍 Connecting to PX4...')
+    print('Connecting to PX4...')
     m.wait_heartbeat(timeout=30)
-    print('✅ Connected to PX4! Bidirectional forwarding active...')
+    print('Connected to PX4! Bidirectional forwarding active...')
 except Exception as e:
-    print(f'❌ Failed to connect to PX4: {e}')
+    print(f'Failed to connect to PX4: {e}')
     print('Make sure PX4 SITL is running: make px4_sitl gazebo_iris')
     sys.exit(1)
 
@@ -86,13 +86,13 @@ def px4_to_windows():
 try:
     cmd_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     cmd_sock.bind(('0.0.0.0', 14541))
-    print('📡 Command relay listening on port 14541')
+    print('Command relay listening on port 14541')
 except Exception as e:
-    print(f'❌ Failed to bind command socket: {e}')
+    print(f'Failed to bind command socket: {e}')
     sys.exit(1)
 
 def windows_to_px4():
-    print('📱 Windows→PX4 relay thread started')
+    print('Windows→PX4 relay thread started')
     while True:
         try:
             data, addr = cmd_sock.recvfrom(4096)
@@ -109,7 +109,7 @@ def windows_to_px4():
                         176: 'SET_MODE'
                     }.get(cmd_id, f'CMD_{cmd_id}')
                     
-                    print(f'🎯 Forwarding {cmd_name} to PX4')
+                    print(f'Forwarding {cmd_name} to PX4')
                     
                     # Forward via MAVLink connection
                     m.mav.command_long_send(
@@ -145,18 +145,18 @@ def send_heartbeat():
         )
         time.sleep(1)
 
-print('🚀 Starting forwarder threads...')
+print('Starting forwarder threads...')
 threading.Thread(target=px4_to_windows, daemon=True).start()
 threading.Thread(target=windows_to_px4, daemon=True).start()
 threading.Thread(target=send_heartbeat, daemon=True).start()
 
-print("\n✅ WSL2 Forwarder active!")
-print("📋 Status: Ready to relay ATAK commands to PX4")
-print("🔄 Press Ctrl+C to stop\n")
+print("\nWSL2 Forwarder active!")
+print("Status: Ready to relay ATAK commands to PX4")
+print("Press Ctrl+C to stop\n")
 
 try:
     while True:
         time.sleep(1)
 except KeyboardInterrupt:
-    print("\n🛑 Forwarder stopped by user")
+    print("\nForwarder stopped by user")
     sys.exit(0)
