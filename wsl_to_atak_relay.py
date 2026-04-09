@@ -3,7 +3,7 @@ import socket
 import threading
 
 WSL2_IP = '192.168.205.171'
-WSL2_PORT = 14540          # send commands back to PX4 here
+WSL2_PORT = 14541          # send commands back to PX4 here
 ATAK_IP = '192.168.1.38'   # phone IP
 LISTEN_PORT = 14560
 ATAK_PORT = 14550
@@ -19,14 +19,14 @@ def wsl_to_atak():
     while True:
         data, addr = sock_gcs.recvfrom(4096)
         sock_atak.sendto(data, (ATAK_IP, ATAK_PORT))
-        print(f'WSL to ATAK: {len(data)} bytes')
+        # print(f'WSL to ATAK: {len(data)} bytes')
 
 # ATAK → WSL2
 def atak_to_wsl():
     while True:
         data, addr = sock_atak.recvfrom(4096)
         sock_gcs.sendto(data, (WSL2_IP, WSL2_PORT))
-        print(f'ATAK to WSL: {len(data)} bytes')
+        # print(f'ATAK to WSL: {len(data)} bytes')
 
 threading.Thread(target=wsl_to_atak, daemon=True).start()
 threading.Thread(target=atak_to_wsl, daemon=True).start()
