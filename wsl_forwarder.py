@@ -136,5 +136,5 @@ def set_position_control_mode():
 threading.Thread(target=px4_to_windows, daemon=True).start()
 threading.Thread(target=windows_to_px4, daemon=True).start()
 threading.Thread(target=send_heartbeat, daemon=True).start()
-set_position_control_mode()
+threading.Thread(target=set_position_control_mode, daemon=True).start()
 input("Press Enter to stop...\n")
