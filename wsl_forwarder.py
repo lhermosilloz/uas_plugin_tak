@@ -66,37 +66,27 @@ cmd_sock.bind(('0.0.0.0', 14541))
 def windows_to_px4():
     while True:
         data, addr = cmd_sock.recvfrom(4096)
-        if len(data) > 30:
-            print(f'CMD to PX4: {len(data)} bytes from {addr}')
+        
+        messages = decode_mavlink_data(data, "ATAK/Windows")
+        for msg in messages:
+            if msg.get_type() == 'COMMAND_LONG':
+                # Forward via MAVLink connection instead of raw UDP
+                m.mav.command_long_send(
+                    target_system=msg.target_system,
+                    target_component=msg.target_component,
+                    command=msg.command,
+                    confirmation=msg.confirmation,
+                    param1=msg.param1,
+                    param2=msg.param2,
+                    param3=msg.param3,
+                    param4=msg.param4,
+                    param5=msg.param5,
+                    param6=msg.param6,
+                    param7=msg.param7
+                )
 
-            # Decode and analyze the MAVLink messages
-            messages = decode_mavlink_data(data, "ATAK/Windows")
-            for msg in messages:
-                msg_type = msg.get_type()
-                print(f'  → Message: {msg_type}')
-                
-                # Show details for command messages
-                if msg_type == 'COMMAND_LONG':
-                    cmd_id = msg.command
-                    print(f'    Command ID: {cmd_id}')
-                    print(f'    Target System: {msg.target_system}')
-                    print(f'    Target Component: {msg.target_component}')
-                    print(f'    Params: [{msg.param1}, {msg.param2}, {msg.param3}, {msg.param4}, {msg.param5}, {msg.param6}, {msg.param7}]')
-                    
-                    # Decode common commands
-                    if cmd_id == 400:  # MAV_CMD_COMPONENT_ARM_DISARM
-                        arm_state = "ARM" if msg.param1 == 1 else "DISARM"
-                        print(f'    → {arm_state} command')
-                    elif cmd_id == 22:  # MAV_CMD_NAV_TAKEOFF
-                        altitude = msg.param7
-                        print(f'    → TAKEOFF to {altitude}m')
-                    elif cmd_id == 21:  # MAV_CMD_NAV_LAND
-                        print(f'    → LAND command')
-                
-                elif msg_type == 'HEARTBEAT':
-                    print(f'    Type: {msg.type}, Autopilot: {msg.autopilot}')
         # Forward to PX4
-        fwd.sendto(data, ('127.0.0.1', PX4_PORT))
+        # fwd.sendto(data, ('127.0.0.1', PX4_PORT))
 
 def send_heartbeat():
     while True:
@@ -106,32 +96,6 @@ def send_heartbeat():
             0, 0, 0
         )
         time.sleep(1)
-
-def set_position_control_mode():
-    """Set PX4 to Position Control mode"""
-    print("Setting Position Control mode...")
-    
-    # PX4 Position Control mode
-    m.mav.set_mode_send(
-        target_system=1,
-        base_mode=mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-        custom_mode=3  # PX4 POSCTL (Position Control) mode
-    )
-    
-    # Wait for mode change confirmation
-    time.sleep(1)
-    
-    # Check if mode changed
-    hb = m.recv_match(type='HEARTBEAT', blocking=True, timeout=3)
-    if hb:
-        print(f"Current flight mode: {hb.custom_mode}")
-        if hb.custom_mode == 3:
-            print("Successfully changed to Position Control mode")
-            return True
-        else:
-            print("Mode change failed")
-            return False
-    return False
 
 threading.Thread(target=px4_to_windows, daemon=True).start()
 threading.Thread(target=windows_to_px4, daemon=True).start()
