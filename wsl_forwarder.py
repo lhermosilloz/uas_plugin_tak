@@ -69,7 +69,7 @@ def windows_to_px4():
         
         messages = decode_mavlink_data(data, "ATAK/Windows")
         for msg in messages:
-            if msg.get_type() == 'COMMAND_LONG':
+            if msg.get_type() == 'COMMAND_LONG' or msg.get_type() == 'COMMAND_INT':
                 # Forward via MAVLink connection instead of raw UDP
                 m.mav.command_long_send(
                     target_system=msg.target_system,
