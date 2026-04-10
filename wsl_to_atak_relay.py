@@ -50,6 +50,10 @@ def atak_to_wsl():
                             
                             if command == 192:
                                 print(f'SET ALTITUDE: {param7:.2f}m')
+                            elif command == 22:
+                                print(f'TAKEOFF: Altitude={param7:.2f}m')
+                            elif command == 400:
+                                print(f'ARM/DISARM: {"ARM" if param1 == 1 else "DISARM"}')
                             
                     elif msgid == 75:  # COMMAND_INT (waypoints, orbits)
                         if len(payload) >= 32:
