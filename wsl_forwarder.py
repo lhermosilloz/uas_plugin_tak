@@ -97,7 +97,11 @@ def windows_to_px4():
                     x=msg.x, y=msg.y, z=msg.z
                 )
             elif msg.get_type() == 'SET_MODE':
-                print("Forwarding SET_MODE command")
+                m.mav.set_mode_send(
+                    target_system=msg.target_system,
+                    base_mode=msg.base_mode,
+                    custom_mode=msg.custom_mode
+                )
         # Forward to PX4
         # fwd.sendto(data, ('127.0.0.1', PX4_PORT))
 
