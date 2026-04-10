@@ -26,10 +26,10 @@ def atak_to_wsl():
     while True:
         data, addr = sock_atak.recvfrom(4096)
         sock_gcs.sendto(data, (WSL2_IP, WSL2_PORT))
-        if len(data) > 23:
+        if len(data) != 23 and len(data) != 17:
             print(f'ATAK to WSL: {len(data)} bytes')
 
-            if len(data) >= 42 and data[0] == 0xfd:
+            if data[0] == 0xfd:
                 import struct
                 try:
                     payload_len = data[1]
@@ -50,8 +50,6 @@ def atak_to_wsl():
                             
                             if command == 192:
                                 print(f'SET ALTITUDE: {param7:.2f}m')
-                            elif command == 252:
-                                print(f'ORBIT: Radius={param1:.2f}')
                             
                     elif msgid == 75:  # COMMAND_INT (waypoints, orbits)
                         if len(payload) >= 32:
@@ -64,9 +62,9 @@ def atak_to_wsl():
                             print(f'    Params: [{param1:.2f}, {param2:.2f}, {param3:.2f}, {param4:.2f}]')
                             print(f'    Position: x={x}, y={y}, z={z:.2f}')
                             
-                            if command == 252:
+                            if command == 34:
                                 print(f'ORBIT COMMAND! Radius={param1:.2f}, Velocity={param2:.2f}')
-                            elif command == 16:
+                            elif command == 192:
                                 print(f'WAYPOINT COMMAND! Alt={z:.2f}')
                             elif command == 21:
                                 print(f'LAND COMMAND!')

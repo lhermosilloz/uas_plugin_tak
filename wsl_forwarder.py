@@ -96,7 +96,8 @@ def windows_to_px4():
                     param1=msg.param1, param2=msg.param2, param3=msg.param3, param4=msg.param4,
                     x=msg.x, y=msg.y, z=msg.z
                 )
-
+            elif msg.get_type() == 'SET_MODE':
+                print("Forwarding SET_MODE command")
         # Forward to PX4
         # fwd.sendto(data, ('127.0.0.1', PX4_PORT))
 
