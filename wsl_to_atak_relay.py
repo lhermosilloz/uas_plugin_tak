@@ -2,9 +2,9 @@
 import socket
 import threading
 
-WSL2_IP = '192.168.205.171'
+WSL2_IP = '172.19.216.248' # PheratechOffice: '192.168.205.171'
 WSL2_PORT = 14541          # send commands back to PX4 here
-ATAK_IP = '192.168.1.38'   # phone IP
+ATAK_IP = '192.168.1.6' # PheratechOffice: '192.168.1.38'   # phone IP
 LISTEN_PORT = 14560
 ATAK_PORT = 14550
 

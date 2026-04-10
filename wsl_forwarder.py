@@ -4,7 +4,7 @@ import threading
 from pymavlink import mavutil
 import time
 
-WINDOWS_HOST = '192.168.192.1'
+WINDOWS_HOST = '172.19.208.1' # PheratechOffice: '192.168.192.1'
 FORWARD_PORT = 14560
 PX4_PORT = 14540
 
