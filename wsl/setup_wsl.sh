@@ -152,7 +152,7 @@ echo -e "${GREEN}Next steps:${NC}"
 echo "1. Start PX4 SITL: make px4_sitl gazebo_iris"
 echo "2. Test connection: python3 test_px4_connection.py"
 echo "3. Run forwarder: python3 wsl_forwarder.py"
-echo "4. Run Windows relay on Windows host"
+echo "4. Run Windows relay: python windows/atak_relay_gui.py"
 echo
 echo "Check README.md for complete usage instructions."
 echo

@@ -1,22 +1,37 @@
 # ATAK-PX4 Integration Bridge
 
-A bidirectional MAVLink bridge that enables ATAK (Android Team Awareness Kit) to control PX4 drones through a Windows → WSL2 → PX4 SITL relay setup.
+A bidirectional MAVLink bridge that enables ATAK (Android Team Awareness Kit) to control PX4 drones through a Windows to WSL2 to PX4 SITL relay setup.
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-ATAK Phone ←→ Windows (wsl_to_atak_relay.py) ←→ WSL2 (wsl_forwarder.py) ←→ PX4 SITL
-    14550         14550 ←→ 14560                   14541 ←→ 14540
+ATAK Phone <-> Windows (atak_relay_gui.py) <-> WSL2 (wsl_forwarder.py) <-> PX4 SITL
+    14550        14550 <-> 14560                  14541 <-> 14540
 ```
 
-## 📁 Project Structure
+## Project Structure
 
-- **`wsl_to_atak_relay.py`** - Windows UDP relay between ATAK and WSL2
-- **`wsl_forwarder.py`** - WSL2 MAVLink bridge between Windows and PX4
-- **`setup_windows.bat`** - Windows environment setup script
-- **`setup_wsl.sh`** - WSL2 environment setup script
+```
+uas_plugin_tak/
+  README.md
+  todo.md
+  windows/                    # Runs on Windows host
+    atak_relay_gui.py          - Qt GUI relay (primary)
+    wsl_to_atak_relay.py       - CLI relay (fallback)
+    generate_icon.py           - Generates app_icon.ico
+    app_icon.ico               - Taskbar icon
+    setup_windows.bat          - Windows environment setup
+  wsl/                        # Runs inside WSL2
+    wsl_forwarder.py           - MAVLink bridge to PX4
+    diagnostic.py              - PX4 system diagnostics
+    test_direct_command.py     - PX4 command testing
+    setup_wsl.sh               - WSL2 environment setup
+  docs/                       # Screenshots and images
+    menu.png
+    QtMenu.png
+```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -24,11 +39,13 @@ ATAK Phone ←→ Windows (wsl_to_atak_relay.py) ←→ WSL2 (wsl_forwarder.py) 
 - **PX4 SITL** running in WSL2
 - **ATAK** app on Android device
 - **Python 3.8+** on both Windows and WSL2
+- **PyQt5** (`pip install PyQt5`)
 
 ### 1. Setup Windows Environment
 
 Run in **PowerShell as Administrator**:
 ```powershell
+cd windows
 .\setup_windows.bat
 ```
 
@@ -36,6 +53,7 @@ Run in **PowerShell as Administrator**:
 
 Run in **WSL2 terminal**:
 ```bash
+cd wsl
 chmod +x setup_wsl.sh
 ./setup_wsl.sh
 ```
@@ -58,53 +76,81 @@ commander mode manual
 
 **Terminal 1 (WSL2):**
 ```bash
+cd wsl
 python3 wsl_forwarder.py
 ```
 
-**Terminal 2 (Windows PowerShell):**
+**Terminal 2 (Windows) - GUI mode (recommended):**
 ```powershell
+cd windows
+python atak_relay_gui.py
+```
+
+The GUI window will open with fields for ATAK IP, WSL2 IP, and ports.
+Click **Start Relay** to begin forwarding.
+
+**Alternative - command-line mode:**
+```powershell
+cd windows
 python wsl_to_atak_relay.py
 ```
 
 ### 5. Configure ATAK
 
 On your ATAK device:
-1. Go to **Settings → Network Preferences → Streaming**
+1. Go to **Settings > Network Preferences > Streaming**
 2. Add connection:
    - **Address:** `<Windows_IP>:14550`
    - **Protocol:** UDP
    - **Role:** Server
 
-## 🔧 Configuration
+## GUI Features
+
+The Qt relay app (`atak_relay_gui.py`) provides:
+
+- **Network Configuration** - Editable IP and port fields with auto-detect for WSL2 IP
+- **Start/Stop Controls** - Start and stop the relay without restarting the app
+- **Save/Load Config** - Persist settings to `relay_config.json` across sessions
+- **Live Message Monitor** - Color-coded console showing decoded MAVLink traffic
+- **Message Filters** - Toggle visibility of Heartbeats, Manual Control, Commands, Set Mode, and Raw Hex
+- **Traffic Statistics** - Live counters for messages in each direction
+- **Custom Taskbar Icon** - Shows a dedicated icon instead of the default Python icon
+
+### Regenerating the Icon
+
+If `app_icon.ico` is missing, regenerate it:
+```powershell
+pip install Pillow
+cd windows
+python generate_icon.py
+```
+
+## Configuration
 
 ### Network Configuration
 
-Upon setup, the scripts will use these variables:
+The GUI lets you configure all network settings directly. Fields are saved with the **Save Config** button.
 
-**wsl_to_atak_relay.py (Windows):**
-- `WSL2_IP` - Auto-detected WSL2 IP address
-- `ATAK_IP` - Auto-detected or manually configured ATAK device IP
-- `LISTEN_PORT = 14560` - Receives data from WSL2
-- `ATAK_PORT = 14550` - Communicates with ATAK
+**Default ports:**
+- `14550` - ATAK MAVLink port
+- `14560` - Listen port (receives from WSL2)
+- `14541` - WSL2 command port
 
 **wsl_forwarder.py (WSL2):**
 - `WINDOWS_HOST = '192.168.192.1'` - Windows host gateway
 - `FORWARD_PORT = 14560` - Sends data to Windows
 - `PX4_PORT = 14540` - PX4 SITL MAVLink port
 
-### Custom IP Configuration
-
-If auto-detection fails, manually edit the IP addresses in the script files.
-
-## 🛠️ Usage
+## Usage
 
 ### Supported ATAK Commands
 
-- ✅ **ARM/DISARM** - Arm or disarm the drone
-- ✅ **TAKEOFF** - Takeoff to specified altitude
-- ✅ **LANDING** - Land at current position
-- ✅ **WAYPOINT NAVIGATION** - Send GPS waypoints
-- ✅ **EMERGENCY STOP** - Immediate stop commands
+- **ARM/DISARM** - Arm or disarm the drone
+- **TAKEOFF** - Takeoff to specified altitude
+- **LANDING** - Land at current position
+- **WAYPOINT NAVIGATION** - Send GPS waypoints
+- **SET MODE** - Switch flight modes (HOLD, LAND, MANUAL)
+- **ORBIT** - Orbital flight patterns
 
 ### Command Flow
 
@@ -115,76 +161,44 @@ If auto-detection fails, manually edit the IP addresses in the script files.
 
 ### Troubleshooting
 
-**🔍 Debug Mode**
-
-Enable verbose logging by uncommenting print statements in both scripts.
+Enable **Raw Hex** and **Commands** filters in the GUI to see all traffic.
 
 **Common Issues:**
 
 - **"ARM Temporarily Rejected"** - Check PX4 safety parameters
 - **"No ATAK connection"** - Verify device IP and firewall settings
 - **"Commands not reaching PX4"** - Ensure WSL2 IP is correct
+- **"Failed to bind sockets"** - Another instance may be running on the same ports
 
 **PX4 Safety Parameters:**
 ```bash
 # Allow external arming
 param set COM_ARM_AUTH_REQ 0
-# Disable RC requirement 
+# Disable RC requirement
 param set COM_RC_IN_MODE 0
 # Allow GPS-free arming
 param set COM_ARM_WO_GPS 1
 ```
 
-## 📊 Network Ports
+## Network Ports
 
-| Port | Service | Direction |
-|------|---------|----------|
-| 14540 | PX4 SITL MAVLink | WSL2 ← → PX4 |
-| 14541 | Command Relay | WSL2 ← Windows |
-| 14550 | ATAK MAVLink | Windows ← → ATAK |
-| 14560 | Status Relay | Windows ← WSL2 |
+| Port  | Service          | Direction          |
+|-------|------------------|--------------------|
+| 14540 | PX4 SITL MAVLink | WSL2 <-> PX4      |
+| 14541 | Command Relay    | WSL2 <- Windows    |
+| 14550 | ATAK MAVLink     | Windows <-> ATAK   |
+| 14560 | Status Relay     | Windows <- WSL2    |
 
-## 🧪 Testing
+## Packaging as .exe
 
-### Manual Testing
-
-**Test Windows → WSL2 connection:**
+To distribute as a standalone Windows executable:
 ```powershell
-# Windows PowerShell
-Test-NetConnection -ComputerName <WSL2_IP> -Port 14541
+pip install pyinstaller
+cd windows
+pyinstaller --onefile --windowed --icon=app_icon.ico atak_relay_gui.py
 ```
+The result will be in `dist/atak_relay_gui.exe`.
 
-**Test PX4 connection:**
-```bash
-# WSL2 Terminal  
-echo "heartbeat" | nc 127.0.0.1 14540
-```
-
-### Expected Output
-
-**wsl_forwarder.py:**
-```
-Waiting for heartbeat from PX4...
-Got heartbeat! Bidirectional forwarding active...
-CMD to PX4: 44 bytes from ('192.168.192.1', 14560)
-  → Message: COMMAND_LONG
-    Command ID: 400
-    → ARM command
-PX4 ACK: Command 400 Result 0
-Accepted
-```
-
-**wsl_to_atak_relay.py:**
-```
-Bidirectional relay running, press Enter to stop...
-```
-
-## 🤝 Contributing
-
-1. Test with your specific PX4/ATAK setup
-2. Submit issues for bugs or feature requests
-3. Improve documentation for edge cases
-
-## 📜 License
+## License
 
 Open source project for ATAK and PX4 development.
