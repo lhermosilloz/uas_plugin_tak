@@ -62,7 +62,7 @@ chmod +x setup_wsl.sh
 
 ```bash
 # In WSL2 PX4 directory
-make px4_sitl gazebo_iris
+make px4_sitl gz_x500_gimbal
 
 # In PX4 console, set parameters for external control:
 param set COM_RC_IN_MODE 0
@@ -74,11 +74,18 @@ commander mode manual
 
 ### 4. Start Bridge Services
 
-**Terminal 1 (WSL2):**
+**Both services must be running for the bridge to work.**
+
+**Terminal 1 (WSL2) - REQUIRED:**
+
+The WSL2 forwarder is the critical link between Windows and PX4. Without it, no MAVLink traffic reaches the drone.
+
 ```bash
 cd wsl
 python3 wsl_forwarder.py
 ```
+
+Wait until you see `Got heartbeat! Bidirectional forwarding active...` before starting the Windows relay.
 
 **Terminal 2 (Windows) - GUI mode (recommended):**
 ```powershell
@@ -105,6 +112,8 @@ On your ATAK device:
    - **Role:** Server
 
 ## GUI Features
+
+![ATAK-PX4 Relay GUI](docs/QtMenu.png)
 
 The Qt relay app (`atak_relay_gui.py`) provides:
 
