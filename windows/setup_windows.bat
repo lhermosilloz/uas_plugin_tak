@@ -95,9 +95,9 @@ echo - Windows IP: %WIN_IP%
 echo - ATAK connection: %WIN_IP%:14550
 echo.
 echo Next steps:
-echo 1. Setup WSL2 environment: run setup_wsl.sh in WSL2
+echo 1. Setup WSL2 environment: run wsl/setup_wsl.sh in WSL2
 echo 2. Start PX4 SITL in WSL2
-echo 3. Run: python wsl_to_atak_relay.py
+echo 3. Run: python atak_relay_gui.py
 echo.
 echo Check README.md for complete usage instructions.
 echo.

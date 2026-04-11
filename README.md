@@ -11,12 +11,25 @@ ATAK Phone <-> Windows (atak_relay_gui.py) <-> WSL2 (wsl_forwarder.py) <-> PX4 S
 
 ## Project Structure
 
-- **`atak_relay_gui.py`** - Windows Qt GUI relay with live message monitoring
-- **`wsl_to_atak_relay.py`** - Windows UDP relay (command-line fallback)
-- **`wsl_forwarder.py`** - WSL2 MAVLink bridge between Windows and PX4
-- **`generate_icon.py`** - Generates the app taskbar icon (`app_icon.ico`)
-- **`setup_windows.bat`** - Windows environment setup script
-- **`setup_wsl.sh`** - WSL2 environment setup script
+```
+uas_plugin_tak/
+  README.md
+  todo.md
+  windows/                    # Runs on Windows host
+    atak_relay_gui.py          - Qt GUI relay (primary)
+    wsl_to_atak_relay.py       - CLI relay (fallback)
+    generate_icon.py           - Generates app_icon.ico
+    app_icon.ico               - Taskbar icon
+    setup_windows.bat          - Windows environment setup
+  wsl/                        # Runs inside WSL2
+    wsl_forwarder.py           - MAVLink bridge to PX4
+    diagnostic.py              - PX4 system diagnostics
+    test_direct_command.py     - PX4 command testing
+    setup_wsl.sh               - WSL2 environment setup
+  docs/                       # Screenshots and images
+    menu.png
+    QtMenu.png
+```
 
 ## Quick Start
 
@@ -32,6 +45,7 @@ ATAK Phone <-> Windows (atak_relay_gui.py) <-> WSL2 (wsl_forwarder.py) <-> PX4 S
 
 Run in **PowerShell as Administrator**:
 ```powershell
+cd windows
 .\setup_windows.bat
 ```
 
@@ -39,6 +53,7 @@ Run in **PowerShell as Administrator**:
 
 Run in **WSL2 terminal**:
 ```bash
+cd wsl
 chmod +x setup_wsl.sh
 ./setup_wsl.sh
 ```
@@ -61,11 +76,13 @@ commander mode manual
 
 **Terminal 1 (WSL2):**
 ```bash
+cd wsl
 python3 wsl_forwarder.py
 ```
 
 **Terminal 2 (Windows) - GUI mode (recommended):**
 ```powershell
+cd windows
 python atak_relay_gui.py
 ```
 
@@ -74,6 +91,7 @@ Click **Start Relay** to begin forwarding.
 
 **Alternative - command-line mode:**
 ```powershell
+cd windows
 python wsl_to_atak_relay.py
 ```
 
@@ -103,6 +121,7 @@ The Qt relay app (`atak_relay_gui.py`) provides:
 If `app_icon.ico` is missing, regenerate it:
 ```powershell
 pip install Pillow
+cd windows
 python generate_icon.py
 ```
 
@@ -175,6 +194,7 @@ param set COM_ARM_WO_GPS 1
 To distribute as a standalone Windows executable:
 ```powershell
 pip install pyinstaller
+cd windows
 pyinstaller --onefile --windowed --icon=app_icon.ico atak_relay_gui.py
 ```
 The result will be in `dist/atak_relay_gui.exe`.
